@@ -100,6 +100,16 @@ st.caption("사진을 찍으면 어떤 김인지 분석해드립니다. (Gemini 
 
 uploaded_file = st.file_uploader("김 포장지 사진을 올려주세요", type=["jpg", "png", "jpeg"])
 
+# ==========================================
+# 3. UI 구성 (상세 정보 표시 버전)
+# ==========================================
+
+st.set_page_config(page_title="Gim Sommelier", page_icon="🍙")
+st.title("🍙 김 소믈리에 (Gim Sommelier)")
+st.caption("사진을 찍으면 어떤 김인지 분석해드립니다. (Gemini 1.5 Flash)")
+
+uploaded_file = st.file_uploader("김 포장지 사진을 올려주세요", type=["jpg", "png", "jpeg"])
+
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption='업로드된 사진', width=300)
@@ -107,21 +117,58 @@ if uploaded_file is not None:
     if st.button("🔍 분석 시작"):
         with st.spinner('Gemini가 포장지를 읽는 중...'):
             ai_result = analyze_image_with_gemini(image)
+            
             if ai_result:
                 matched_product, score = find_best_match(ai_result, df)
+                
                 st.divider()
+                
                 if matched_product is not None:
-                    st.subheader(f"🎯 {matched_product['브랜드']} {matched_product['제품명']}")
-                    st.write(f"**평점:** ⭐ {matched_product['평점']}")
-                    st.write(f"**특징:** {matched_product['핵심요약']}")
+                    # 1. 헤더 (브랜드 + 제품명)
+                    st.success("제품을 찾았습니다!")
+                    st.markdown(f"## 🎯 {matched_product['브랜드']} {matched_product['제품명']}")
+                    
+                    # 2. 핵심 지표 3개 (평점, 리뷰수, 가격) - 보기 좋게 가로 배치
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("⭐ 평점", f"{matched_product['평점']}점")
+                    with col2:
+                        st.metric("💬 리뷰 수", f"{matched_product['리뷰수']}개")
+                    with col3:
+                        st.metric("💰 가격", f"{matched_product['가격']}")
+                    
+                    st.markdown("---")
+                    
+                    # 3. 상세 스펙 (나머지 모든 데이터 표시)
+                    st.markdown("### 📋 상세 정보")
+                    
+                    # 보기 좋게 2단으로 나누어 정보 표시
+                    detail_col1, detail_col2 = st.columns(2)
+                    
+                    with detail_col1:
+                        st.markdown(f"**🏷️ 종류:** {matched_product['종류']}")
+                        st.markdown(f"**🛒 주요 판매처:** {matched_product['쇼핑몰']}")
+                    
+                    with detail_col2:
+                        st.markdown(f"**🔑 제품 ID:** {matched_product['제품_ID']}")
+                        # 혹시 나중에 추가될 데이터가 있다면 여기에 표시
+                        
+                    # 4. 핵심 요약 (강조 박스)
+                    st.info(f"**💡 핵심 요약:**\n\n{matched_product['핵심요약']}")
+                    
+                    # 5. 쇼핑몰 링크 버튼
                     search_query = f"{matched_product['브랜드']} {matched_product['제품명']}"
-                    st.link_button("🛍️ 네이버 최저가 보기", f"https://search.shopping.naver.com/search/all?query={search_query}")
+                    st.link_button(
+                        "🛍️ 네이버 최저가 검색하러 가기", 
+                        f"https://search.shopping.naver.com/search/all?query={search_query}",
+                        use_container_width=True
+                    )
+                    
+                    # 6. 디버깅용 (AI가 읽은 값과 매칭 점수 확인)
+                    with st.expander("AI 분석 상세 데이터 보기 (디버깅용)"):
+                        st.write(f"AI 인식 텍스트: {ai_result}")
+                        st.write(f"매칭 정확도: {score}점")
+                        
                 else:
-
                     st.warning("비슷한 제품을 찾지 못했습니다.")
-
-
-
-
-
-
+                    st.write(f"AI가 읽은 내용: {ai_result}")
