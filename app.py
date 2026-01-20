@@ -6,6 +6,36 @@ from thefuzz import process, fuzz
 import io
 import json
 
+import google.generativeai as genai
+import streamlit as st
+
+# API 키 설정 (Streamlit Secrets에서 가져오거나 직접 입력)
+try:
+    api_key = st.secrets["GEMINI_API_KEY"]
+except:
+    api_key = "AIzaSyBD6qkuTB1td1IGOwZ8m8QxufEFcDu49pI"
+
+genai.configure(api_key=api_key)
+
+st.title("🤖 2026년 현재 사용 가능한 Gemini 모델 리스트")
+
+# 사용 가능한 모델 조회
+try:
+    st.write("Google 서버에 접속하여 모델 목록을 가져오고 있습니다...")
+    models = genai.list_models()
+    
+    found_models = []
+    for m in models:
+        # 'generateContent' 기능이 있는(텍스트/이미지 생성용) 모델만 필터링
+        if 'generateContent' in m.supported_generation_methods:
+            found_models.append(m.name)
+            
+    st.success("조회 성공! 아래 모델 이름 중 하나로 코드를 수정하세요.")
+    st.code("\n".join(found_models))
+    
+except Exception as e:
+    st.error(f"에러 발생: {e}")
+
 # ==========================================
 # 1. 설정 및 데이터 로드
 # ==========================================
@@ -111,4 +141,5 @@ if uploaded_file is not None:
                     search_query = f"{matched_product['브랜드']} {matched_product['제품명']}"
                     st.link_button("🛍️ 네이버 최저가 보기", f"https://search.shopping.naver.com/search/all?query={search_query}")
                 else:
+
                     st.warning("비슷한 제품을 찾지 못했습니다.")
