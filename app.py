@@ -87,14 +87,32 @@ def analyze_image_with_gemini(image):
         return None
 
 def find_best_match(ai_result, database):
+    """AI가 찾은 텍스트와 DB를 비교하여 가장 비슷한 제품 찾기 (오류 수정판)"""
+    
+    # 검색을 위해 DB에 '검색용_텍스트' 컬럼 생성 (브랜드 + 제품명)
     database['검색용_텍스트'] = database['브랜드'].astype(str) + " " + database['제품명'].astype(str)
+    
+    # AI가 찾은 브랜드 + 제품명
     query = f"{ai_result.get('brand', '')} {ai_result.get('product_name', '')}"
-    best_match = process.extractOne(query, database['검색용_텍스트'].tolist(), scorer=fuzz.token_set_ratio)
+    
+    # 가장 유사한 제품 찾기 (TheFuzz 라이브러리 사용)
+    # extractOne은 보통 (매칭된문자열, 점수) 튜플을 반환합니다.
+    choices = database['검색용_텍스트'].tolist()
+    best_match = process.extractOne(query, choices, scorer=fuzz.token_set_ratio)
     
     if best_match:
-        matched_str, score, index = best_match
-        if score < 40: return None, score
-        return database.iloc[index], score
+        # 반환값이 (문자열, 점수) 2개인 경우와 (문자열, 점수, 인덱스) 3개인 경우를 모두 대비
+        matched_str = best_match[0]
+        score = best_match[1]
+        
+        # 유사도 점수가 50점 미만이면 매칭 실패로 간주
+        if score < 50:
+            return None, score
+            
+        # 찾은 문자열(matched_str)을 이용해 DB에서 해당 행(Row)을 다시 가져옵니다
+        matched_row = database[database['검색용_텍스트'] == matched_str].iloc[0]
+        return matched_row, score
+        
     return None, 0
 
 # ==========================================
@@ -126,6 +144,7 @@ if uploaded_file is not None:
                 else:
 
                     st.warning("비슷한 제품을 찾지 못했습니다.")
+
 
 
 
