@@ -117,7 +117,7 @@ df = load_data()
 # ==========================================
 
 def analyze_image_with_gemini(image):
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     # 분석은 정확도를 위해 한국어로 진행하고, 매칭 후에 번역합니다.
     prompt = """
     이 김 포장지 사진을 분석해서 다음 정보를 JSON 형식으로 출력해줘.
@@ -221,3 +221,4 @@ if uploaded_file is not None:
                     )
                 else:
                     st.warning(t["fail_match"])
+
