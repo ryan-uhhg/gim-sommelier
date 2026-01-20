@@ -55,7 +55,7 @@ df = load_data()
 # ==========================================
 
 def analyze_image_with_gemini(image):
-    # 모델 설정을 1.5 Flash로 지정
+    # 모델 설정을 2.5 Flash로 지정
     model = genai.GenerativeModel('gemini-2.5-flash')
     
     prompt = """
@@ -121,7 +121,7 @@ def find_best_match(ai_result, database):
 
 st.set_page_config(page_title="Gim Sommelier", page_icon="🍙")
 st.title("🍙 김 소믈리에 (Gim Sommelier)")
-st.caption("사진을 찍으면 어떤 김인지 분석해드립니다. (Gemini 1.5 Flash)")
+st.caption("사진을 찍으면 어떤 김인지 분석해드립니다. (Gemini 2.5 Flash)")
 
 uploaded_file = st.file_uploader("김 포장지 사진을 올려주세요", type=["jpg", "png", "jpeg"])
 
@@ -144,6 +144,7 @@ if uploaded_file is not None:
                 else:
 
                     st.warning("비슷한 제품을 찾지 못했습니다.")
+
 
 
 
