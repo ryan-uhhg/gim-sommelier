@@ -55,7 +55,9 @@ df = load_data()
 # ==========================================
 
 def analyze_image_with_gemini(image):
+    # 모델 설정을 1.5 Flash로 지정
     model = genai.GenerativeModel('gemini-2.0-flash')
+    
     prompt = """
     이 김 포장지 사진을 분석해서 다음 정보를 JSON 형식으로 출력해줘.
     응답 형식:
@@ -66,11 +68,22 @@ def analyze_image_with_gemini(image):
     }
     JSON 외에 다른 말은 하지 마.
     """
+    
     try:
+        # 에러 확인을 위해 stream=False로 호출
         response = model.generate_content([prompt, image])
+        
+        # 응답이 비어있는지 확인
+        if not response.text:
+            st.error("AI 응답이 비어있습니다. (Safety Filter 등 원인)")
+            return None
+
         text = response.text.replace("```json", "").replace("```", "").strip()
         return json.loads(text)
+
     except Exception as e:
+        # [중요] 에러가 나면 화면에 빨간 글씨로 띄워줍니다.
+        st.error(f"🚨 AI 분석 중 오류 발생: {e}")
         return None
 
 def find_best_match(ai_result, database):
@@ -113,4 +126,5 @@ if uploaded_file is not None:
                 else:
 
                     st.warning("비슷한 제품을 찾지 못했습니다.")
+
 
